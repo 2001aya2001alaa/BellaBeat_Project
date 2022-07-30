@@ -1,0 +1,89 @@
+select count(Distinct Customer_ID) as Customer_weight from Weight                    -- 8
+
+select count(Distinct Customer_ID) as Customer_sleep from SleepDay                   -- 24
+
+select count(Distinct Customer_ID) as Customer_activity from DailyActivity           -- 33
+
+select count(Distinct SleepDay.Customer_Id) from Weight, SleepDay, DailyActivity     -- 6
+where DailyActivity.Customer_ID = Weight.Customer_ID 
+and DailyActivity.Customer_ID = SleepDay.Customer_Id 
+and Weight.Customer_ID = SleepDay.Customer_Id
+
+select * from DailyActivity
+select * from SleepDay
+select * from Weight
+
+----------------------------------------------------------** Weight **----------------------------------------------------------
+select *, Cast(Date as date) as NewDate, left(Cast(Time as time),8) as NewTime from Weight
+
+select min(Date) as FirstDay, Max(Date) as LastDay from Weight  -- one month
+
+select Customer_ID, avg(Weight_Kg), count([Day_of_Week]) as NumOfDays, min(Date) as FirstDate, Max(Date) as LastDate 
+from Weight 
+group by Customer_ID order by Customer_ID
+
+----------------------------------------------------------** Sleep **----------------------------------------------------------
+select * from SleepDay
+
+select min(Sleep_Day) as FirstDate, Max(Sleep_Day) as LastDate from SleepDay  -- one month
+
+select Customer_Id, count([Day_of_Week]) as NumOfDays, min(Sleep_Day) as FirstDay, max(Sleep_Day) as LastDay from SleepDay
+group by Customer_Id order by Customer_Id
+
+-- 9 of 24 customers uses < 10 times (37.5%)
+select Customer_Id, count([Day_of_Week]) as NumOfDays, min(Sleep_Day) as FirstDay, max(Sleep_Day) as LastDay from SleepDay
+group by Customer_Id 
+having count([Day_of_Week]) < 10
+order by count([Day_of_Week])
+
+-- 3 of 24 customers uses > 10 and < 20 times (12.5%)
+select Customer_Id, count([Day_of_Week]) as NumOfDays, min(Sleep_Day) as FirstDay, max(Sleep_Day) as LastDay from SleepDay
+group by Customer_Id 
+having count([Day_of_Week]) > 10 and count([Day_of_Week]) < 20
+order by count([Day_of_Week])
+
+-- 12 of 24 customers uses > 20 times (50%)
+select Customer_Id, count([Day_of_Week]) as NumOfDays, min(Sleep_Day) as FirstDay, max(Sleep_Day) as LastDay from SleepDay
+group by Customer_Id 
+having count([Day_of_Week]) > 20
+order by count([Day_of_Week])
+
+select Customer_Id, avg(Total_Time_In_Bed-Total_Minutes_Asleep) as minsAwake from SleepDay
+group by Customer_Id
+
+------------------------------------- ** Problem with this customer **
+select *, Total_Time_In_Bed-Total_Minutes_Asleep as minsAwake from SleepDay where Customer_Id = 1844505072
+select * from DailyActivity where Customer_ID = 1844505072
+
+----------------------------------------------------------** Activity **------------------------------------------------------------------------
+select * from DailyActivity
+
+------------------------ ** Customer and Number of days 
+select Customer_ID, count([Day_of_Week]) as NumOfDays, Round(avg([Total_Steps]),2) as Total_Steps
+from DailyActivity 
+group by Customer_ID
+order by count([Day_of_Week]) desc
+
+---------- ** Number of Customers used this features for each day
+with customerDays as (
+select Customer_ID, count([Day_of_Week]) as NumOfDays
+from DailyActivity group by Customer_ID
+)
+select NumOFDays, count(Customer_ID) as NumOfCustmers from customerDays 
+group by NumOFDays
+order by NumOfCustmers desc
+
+select Customer_ID, count([Day_of_Week]) as NumOfDays, Round(avg(Total_Steps),2) as averageSteps, Round(avg([Total_Distance]),2) avgDistance, 
+Sum([Total_Distance]) as Total_Distance, Round(avg([Calories]),2) avgCalories
+from DailyActivity group by Customer_ID
+order by count([Day_of_Week]) desc
+
+------------------- ** Percentage of each Active Distance
+select Round(avg([Very_Active_Distance]),2) as Very_Active_Distance, 
+       Round(avg([Moderately_Active_Distance]),2) as [Moderately_Active_Distance],
+       Round(avg([Light_Active_Distance]),2) as Light_Active_Distance, 
+	   Round(avg([Sedentary_Active_Distance]),4) as Sedentary_Active_Distance
+from DailyActivity
+
+
+
